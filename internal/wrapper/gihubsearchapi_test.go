@@ -56,8 +56,9 @@ func TestSearchCode_HTTPError(t *testing.T) {
 	defer server.Close()
 
 	client := &GithubSearchApiClient{
-		Token:  "invalid-token",
-		Client: server.Client(),
+		Token:   "invalid-token",
+		Client:  server.Client(),
+		BaseURL: server.URL,
 	}
 
 	_, err := client.SearchCode(context.Background(), "test", "")
