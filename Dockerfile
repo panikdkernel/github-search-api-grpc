@@ -21,13 +21,11 @@ RUN apt-get update && \
     rm -rf protoc-21.12-linux-x86_64.zip
 
 # install required plugins
-RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest && \
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@latest && \
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 
-ENV PATH="/go/bin:$PATH"
-
 # Generate Proto code
-RUN make build_proto
+RUN export PATH="/go/bin:$PATH" && make build_proto
 
 # Build the Go binary
 RUN go build -o server ./server
