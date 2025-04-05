@@ -46,7 +46,13 @@ export GRPC_PORT=9001
 make build_proto
 ```
 
-### 4. Run the server
+### 4. Run tests
+
+```bash
+make run_tests
+```
+
+### 5. Run the server
 
 ```bash
 go run server/main.go
