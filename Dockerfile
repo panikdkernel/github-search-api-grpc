@@ -31,15 +31,15 @@ RUN export PATH="/go/bin:$PATH" && make build_proto
 RUN go build -o server ./server
 
 # Final lightweight image
-FROM gcr.io/distroless/base-debian11
+FROM ubuntu
 
 WORKDIR /app
 
 # Copy built binary from builder
 COPY --from=builder /app/server .
 
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/
 
-RUN apt update && apt install libc6
 # Set required environment variables here (or set at runtime)
 # ENV GITHUB_TOKEN=your_token
 # ENV GRPC_PORT=9001
