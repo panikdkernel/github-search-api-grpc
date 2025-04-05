@@ -12,7 +12,6 @@ func GetEnv(key, fallback string) string {
 }
 
 var (
-	Port                       = GetEnv("GRPC_PORT", "9001")
-	GithubToken                = os.Getenv("GITHUB_TOKEN")
-	GithubSearchApiCodeBaseUrl = "https://api.github.com/search/code"
+	Port        = GetEnv("GRPC_PORT", "9001")
+	GithubToken = os.Getenv("GITHUB_TOKEN")
 )

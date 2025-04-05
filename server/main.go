@@ -2,15 +2,12 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"log"
 	"net"
-	"net/http"
-	"net/url"
 
 	"github.com/panikdkernel/github-search-api-grpc/config"
 	pb "github.com/panikdkernel/github-search-api-grpc/githubsearch_proto"
+	"github.com/panikdkernel/github-search-api-grpc/internal/wrapper"
 	"google.golang.org/grpc"
 )
 
@@ -21,60 +18,24 @@ type server struct {
 func (s *server) Search(ctx context.Context, req *pb.SearchRequest) (*pb.SearchResponse, error) {
 	log.Printf("Search called with term: %s, user: %s", req.SearchTerm, req.User)
 
-	// Prepare GitHub Search API URL
-	baseURL := config.GithubSearchApiCodeBaseUrl
-	query := req.SearchTerm
-	if req.User != "" {
-		query += " user:" + req.User
-	}
-	apiURL := fmt.Sprintf("%s?q=%s", baseURL, url.QueryEscape(query))
-
-	// Create HTTP client and request
-	client := &http.Client{}
-	httpReq, err := http.NewRequestWithContext(ctx, "GET", apiURL, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	// GitHub token is required
-	token := config.GithubToken
-
-	httpReq.Header.Set("Authorization", "Bearer "+token)
+	githubSearchClient := wrapper.NewGithubSearchApiClient(config.GithubToken)
 
 	// Make the request
-	resp, err := client.Do(httpReq)
+	results, err := githubSearchClient.SearchCode(ctx, req.SearchTerm, req.User)
 	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	// Parse response
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("GitHub API error: %s", resp.Status)
-	}
-
-	var jsonResp struct {
-		Items []struct {
-			HTMLURL    string `json:"html_url"`
-			Repository struct {
-				FullName string `json:"full_name"`
-			} `json:"repository"`
-		} `json:"items"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&jsonResp); err != nil {
 		return nil, err
 	}
 
 	// Map to gRPC response format
-	results := []*pb.Result{}
-	for _, item := range jsonResp.Items {
-		results = append(results, &pb.Result{
-			FileUrl: item.HTMLURL,
-			Repo:    item.Repository.FullName,
+	var grpcResults []*pb.Result
+	for _, item := range results {
+		grpcResults = append(grpcResults, &pb.Result{
+			FileUrl: item.FileURL,
+			Repo:    item.Repo,
 		})
 	}
 
-	return &pb.SearchResponse{Results: results}, nil
+	return &pb.SearchResponse{Results: grpcResults}, nil
 }
 
 func main() {
