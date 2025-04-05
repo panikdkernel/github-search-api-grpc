@@ -8,7 +8,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"os"
 
 	"github.com/panikdkernel/github-search-api-grpc/config"
 	pb "github.com/panikdkernel/github-search-api-grpc/githubsearch_proto"
@@ -38,7 +37,8 @@ func (s *server) Search(ctx context.Context, req *pb.SearchRequest) (*pb.SearchR
 	}
 
 	// GitHub token is required
-	token := os.Getenv("GITHUB_TOKEN")
+	token := config.GithubToken
+
 	httpReq.Header.Set("Authorization", "Bearer "+token)
 
 	// Make the request
